@@ -52,3 +52,51 @@ structure.
 The first data milestone is to report the cross-dataset match rate and the
 number of eligible transfers. If fewer than approximately 300 reliable
 examples remain, model capacity and feature count will be reduced.
+
+## To download the data files use this prompt
+
+Windows Power Shell:
+
+```code
+
+New-Item -ItemType Directory -Force data/raw/wyscout, data/raw/transfermarkt | Out-Null
+
+Set-Location data/raw/wyscout
+curl.exe -L -o events.zip   https://ndownloader.figshare.com/files/14464685
+curl.exe -L -o matches.zip  https://ndownloader.figshare.com/files/14464622
+curl.exe -L -o players.json https://ndownloader.figshare.com/files/15073721
+curl.exe -L -o teams.json   https://ndownloader.figshare.com/files/15073697
+Expand-Archive events.zip -DestinationPath . -Force
+Expand-Archive matches.zip -DestinationPath . -Force
+Remove-Item events.zip, matches.zip
+Get-ChildItem -Recurse -Include *World_Cup*, *European_Championship* | Remove-Item
+
+Set-Location ../transfermarkt
+foreach ($t in "players","transfers","appearances","games","clubs","player_valuations") {
+  curl.exe -fL -o "$t.csv.gz" "https://pub-e682421888d945d684bcae8890b0ec20.r2.dev/data/$t.csv.gz"
+  if ($LASTEXITCODE) { "FAILED $t" }
+}
+Set-Location ../../..
+```
+
+MacOS/Linux:
+
+```code
+mkdir -p data/raw/wyscout data/raw/transfermarkt
+
+cd data/raw/wyscout
+curl -L -o events.zip   https://ndownloader.figshare.com/files/14464685
+curl -L -o matches.zip  https://ndownloader.figshare.com/files/14464622
+curl -L -o players.json https://ndownloader.figshare.com/files/15073721
+curl -L -o teams.json   https://ndownloader.figshare.com/files/15073697
+unzip -o events.zip && unzip -o matches.zip
+rm events.zip matches.zip
+find . \( -name "*World_Cup*" -o -name "*European_Championship*" \) -delete
+
+cd ../transfermarkt
+for t in players transfers appearances games clubs player_valuations; do
+  curl -fL -o $t.csv.gz https://pub-e682421888d945d684bcae8890b0ec20.r2.dev/data/$t.csv.gz || echo "FAILED $t"
+done
+cd ../../..
+```
+

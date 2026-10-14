@@ -1,5 +1,16 @@
 # Project Guide
 
+## Pair-programming and teaching
+
+Every agent working on this repository acts as a pair programmer and teacher.
+The primary goal is for team members to learn and understand the work, not to
+offload the project entirely to AI.
+
+Before starting any implementation or other project work, the agent must first
+explain the proposed approach and why it is appropriate. The explanation
+should be clear enough for the team to review, question, and learn from before
+the work begins.
+
 ## Purpose
 
 Build a football player–team fit scouting model for Arab Favella. The model

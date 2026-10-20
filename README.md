@@ -53,50 +53,22 @@ The first data milestone is to report the cross-dataset match rate and the
 number of eligible transfers. If fewer than approximately 300 reliable
 examples remain, model capacity and feature count will be reduced.
 
-## To download the data files use this prompt
+## Downloading the data
 
-Windows Power Shell:
+From the repository root, on Windows, macOS, or Linux:
 
-```code
-
-New-Item -ItemType Directory -Force data/raw/wyscout, data/raw/transfermarkt | Out-Null
-
-Set-Location data/raw/wyscout
-curl.exe -L -o events.zip   https://ndownloader.figshare.com/files/14464685
-curl.exe -L -o matches.zip  https://ndownloader.figshare.com/files/14464622
-curl.exe -L -o players.json https://ndownloader.figshare.com/files/15073721
-curl.exe -L -o teams.json   https://ndownloader.figshare.com/files/15073697
-Expand-Archive events.zip -DestinationPath . -Force
-Expand-Archive matches.zip -DestinationPath . -Force
-Remove-Item events.zip, matches.zip
-Get-ChildItem -Recurse -Include *World_Cup*, *European_Championship* | Remove-Item
-
-Set-Location ../transfermarkt
-foreach ($t in "players","transfers","appearances","games","clubs","player_valuations") {
-  curl.exe -fL -o "$t.csv.gz" "https://pub-e682421888d945d684bcae8890b0ec20.r2.dev/data/$t.csv.gz"
-  if ($LASTEXITCODE) { "FAILED $t" }
-}
-Set-Location ../../..
+```bash
+python src/data/download_data.py
 ```
 
-MacOS/Linux:
+This fetches the Wyscout files (`players.json`, `teams.json`, and
+`matches_*.json` / `events_*.json` for England, France, Germany, Italy, and
+Spain) into `data/raw/wyscout/`, and the six Transfermarkt tables into
+`data/raw/transfermarkt/`. It needs only the Python standard library.
 
-```code
-mkdir -p data/raw/wyscout data/raw/transfermarkt
-
-cd data/raw/wyscout
-curl -L -o events.zip   https://ndownloader.figshare.com/files/14464685
-curl -L -o matches.zip  https://ndownloader.figshare.com/files/14464622
-curl -L -o players.json https://ndownloader.figshare.com/files/15073721
-curl -L -o teams.json   https://ndownloader.figshare.com/files/15073697
-unzip -o events.zip && unzip -o matches.zip
-rm events.zip matches.zip
-find . \( -name "*World_Cup*" -o -name "*European_Championship*" \) -delete
-
-cd ../transfermarkt
-for t in players transfers appearances games clubs player_valuations; do
-  curl -fL -o $t.csv.gz https://pub-e682421888d945d684bcae8890b0ec20.r2.dev/data/$t.csv.gz || echo "FAILED $t"
-done
-cd ../../..
-```
-
+- Files already downloaded are skipped, so re-run it to retry any failures.
+- Use `--force` to re-download everything.
+- Transfermarkt is pinned to the snapshot published 2026-09-05 (data current
+  to 2026-07-06). Every file is checked against a stored MD5, so everyone
+  works on identical data. If a check fails, upstream has changed the file:
+  talk to the team before updating `TM_MD5` in the script.

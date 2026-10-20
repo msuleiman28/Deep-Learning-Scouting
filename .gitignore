@@ -2,6 +2,7 @@ data/raw/*
 data/interim/*
 data/processed/*
 !data/*/.gitkeep
+!data/processed/split.csv
 .claude
 .venv
 __pycache__/

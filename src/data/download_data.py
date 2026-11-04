@@ -16,6 +16,17 @@ Notes on the sources:
   2026-09-05 (data current to 2026-07-06) by MD5 in ``TM_MD5``. Downloads and
   existing files are checked against it, so if upstream ever changes a file
   the script fails loudly instead of silently handing out different data.
+- ClubElo ratings come from the xgabora/Club-Football-Match-Data GitHub mirror
+  (the ClubElo API was down). The URL is pinned to a commit and checked by MD5.
+  Snapshots are on the 1st and 15th of each month; records up to 2025-06-01
+  are genuine ClubElo ratings.
+- Understat player-season stats and shots (big 5, 2014/15-2020/21) come from
+  the douglasbc/scraping-understat-dataset GitHub repo, pinned to its final
+  commit. A commit-pinned URL always serves identical content, so no per-file
+  MD5 is stored. 2021/22 is left out because that repo stopped mid-season.
+  Understat asks not to be crawled and the repo has no licence: we only
+  download the published copy, never redistribute it, and credit the source
+  (see Plan.md, decision on Understat permission).
 """
 
 from __future__ import annotations
@@ -47,6 +58,17 @@ TM_MD5 = {  # pinned snapshot: published 2026-09-05, data current to 2026-07-06
     "clubs": "f30713f2d0022ca4ecbb382cd695e389",
     "player_valuations": "087cb1d21a2469ff4a597b6ca86cced4",
 }
+
+ELO_URL = ("https://raw.githubusercontent.com/xgabora/Club-Football-Match-Data/"
+           "2e8632bc31753bc241171b007683ec36085f6382/data/EloRatings.csv")
+ELO_MD5 = "5e34acea35f33b1a96a494c9cd450ae9"
+
+UNDERSTAT_BASE = ("https://raw.githubusercontent.com/douglasbc/scraping-understat-dataset/"
+                  "87960c218d873b63daabdd851e93adbecab77faa/datasets")
+UNDERSTAT_LEAGUES = ["epl", "la_liga", "bundesliga", "serie_a", "ligue_1"]
+UNDERSTAT_SEASONS = [f"{y % 100:02d}-{(y + 1) % 100:02d}" for y in range(2014, 2021)]  # 14-15 ... 20-21
+UNDERSTAT_FILES = [f"{kind}_{lg}_{s}.csv" for lg in UNDERSTAT_LEAGUES for s in UNDERSTAT_SEASONS
+                   for kind in ("players", "shots")]
 
 
 def find_repo_root() -> Path:
@@ -86,7 +108,7 @@ def download(url: str, dest: Path, md5: str | None = None) -> None:
     if md5 and h.hexdigest() != md5:
         tmp.unlink()
         raise ValueError("does not match the pinned snapshot (upstream changed the file); "
-                         "ask the team before updating TM_MD5")
+                         "ask the team before updating the pinned MD5")
     tmp.replace(dest)
 
 
@@ -136,9 +158,10 @@ def main() -> None:
     args = parser.parse_args()
 
     raw = find_repo_root() / "data" / "raw"
-    wy_dir, tm_dir = raw / "wyscout", raw / "transfermarkt"
-    wy_dir.mkdir(parents=True, exist_ok=True)
-    tm_dir.mkdir(parents=True, exist_ok=True)
+    wy_dir, tm_dir, elo_dir = raw / "wyscout", raw / "transfermarkt", raw / "clubelo"
+    us_dir = raw / "understat"
+    for d in (wy_dir, tm_dir, elo_dir, us_dir):
+        d.mkdir(parents=True, exist_ok=True)
     failures: list[str] = []
 
     print(f"Wyscout -> {wy_dir}")
@@ -151,9 +174,19 @@ def main() -> None:
     for t in TM_TABLES:
         fetch(f"{TM_BASE}/{t}.csv.gz", tm_dir / f"{t}.csv.gz", args.force, failures, TM_MD5[t])
 
+    print(f"ClubElo -> {elo_dir}")
+    fetch(ELO_URL, elo_dir / "EloRatings.csv", args.force, failures, ELO_MD5)
+
+    print(f"Understat -> {us_dir}")
+    for name in UNDERSTAT_FILES:
+        league = name.split("_", 1)[1].rsplit("_", 1)[0]  # players_la_liga_17-18.csv -> la_liga
+        fetch(f"{UNDERSTAT_BASE}/{league}/{name}", us_dir / name, args.force, failures)
+
     expected = ([wy_dir / n for n in WYSCOUT_FILES]
                 + [wy_dir / f"{p}_{lg}.json" for p in WYSCOUT_ZIPS.values() for lg in LEAGUES]
-                + [tm_dir / f"{t}.csv.gz" for t in TM_TABLES])
+                + [tm_dir / f"{t}.csv.gz" for t in TM_TABLES]
+                + [elo_dir / "EloRatings.csv"]
+                + [us_dir / n for n in UNDERSTAT_FILES])
     missing = [p.name for p in expected if not p.exists()]
     if failures or missing:
         print("\nIncomplete. Failed:", ", ".join(failures) or "-", "| Missing:", ", ".join(missing) or "-")

@@ -53,14 +53,14 @@ multi-season dataset removes that limit (D7, D11).
 ### Later milestones (in this order)
 
 1. **Multi-season dataset** (§6): transfers after each feature season, with
-   player features from Transfermarkt plus Understat and/or EA FC (D8, D11).
+   player features from Transfermarkt, Understat and EA FC (D8, D11).
    This is what makes a non-small neural model possible. Estimated N:
 
    | Player source | Feature seasons | N |
    |---|---|---|
    | Understat | 2014/15 – 2020/21 | **≈ 1,950**, about 7× milestone 1 |
    | EA FC, big-5 selling clubs | 2015/16 – 2022/23 | **≈ 2,800** |
-   | EA FC, any selling league (D11 question) | 2015/16 – 2022/23 | up to **≈ 5,800** |
+   | EA FC, any selling league (D13, open) | 2015/16 – 2022/23 | up to **≈ 5,800** |
 2. **Team-style features and clustering:** team style vectors and clusters.
    Rich version from Wyscout for 2017/18. A multi-season version from:
    - Transfermarkt formations
@@ -102,18 +102,6 @@ come from **player–team fit** and from **more data**.
 - **D3. Manager at summer transfers** (low priority): 21% of transfers have a
   different manager before and after the move. Keep the strict pre-transfer
   definition, or use the manager in the first game after the transfer?
-- **D8. Understat permission:** Understat's `robots.txt` asks not to be
-  crawled, and the published copy we use
-  (`douglasbc/scraping-understat-dataset`) has no licence. **Ask the
-  professor** whether using it for a non-commercial course project is
-  acceptable. Until then:
-  - never scrape Understat ourselves
-  - never commit or redistribute the files
-  - credit both sources in any write-up
-
-  If the answer is no, the multi-season dataset uses Transfermarkt features
-  only (same N, no xG-based quality measures), or Transfermarkt + EA FC if
-  D11 is adopted.
 - **D9. COVID-affected labels:** transfers after the 2018/19 and 2019/20
   seasons have labels in the stoppage, or in seasons with 5 substitutes,
   crowded fixtures and no fans. Keep them with a `covid_label` flag
@@ -123,40 +111,30 @@ come from **player–team fit** and from **more data**.
 - **D10. Multi-season split:** recommendation is a **time-based split**: test
   on transfers after the 2020/21 season (≈ 390, with normal 2021/22 labels)
   and train/validate on the earlier seasons. This replaces the random split
-  for later milestones; `split.csv` stays the milestone 1 split. If D11
-  adopts EA FC, the test season can instead be transfers after 2022/23
-  (≈ 540 big-5 selling clubs, normal 2023/24 labels).
-- **D11. EA FC as player-feature source for the multi-season dataset.**
-  - **Recommendation:** use EA FC attributes as player features in §6,
-    alongside the Transfermarkt features. Whether they replace or complement
-    Understat depends on D8.
-  - **Why:** Understat describes players mostly through attacking (the D7
-    trade-off, weak for defenders), and its permission is unresolved (D8).
-    EA FC rates passing, defending, physical and mental attributes for every
-    position and every league in the game, across our feature seasons
-    2015/16 – 2022/23.
-  - **Questions for the professor:**
-    1. Is changing the multi-season player-feature source acceptable?
-    2. EA ratings are expert opinions (scouting assessments updated from
-       real-life form), not observed events. Is that acceptable for
-       features, given the label stays observed Transfermarkt playing time?
-    3. Licence: the Kaggle page lists **CC0: Public Domain** (checked
-       2026-11-03, dataset version 4), but the ratings themselves are EA's.
-       Is that acceptable for a course project?
-  - **Question for the team: allow selling clubs outside the big 5?** EA
-    covers more leagues than Understat. With non-big-5 selling clubs, N is
-    ≈ 5,800 over 2015/16 – 2022/23, vs ≈ 2,800 big-5 only.
-    - The 5,800 is an **upper bound**. It counts every league Transfermarkt
-      tracks, but EA's licensed leagues change by edition (e.g. Russia
-      removed in 2022; Ukraine and Serbia mostly missing; generated names
-      for some Brazilian players).
-    - The estimate uses the D7 method, re-run 2026-11-04. Per feature
-      season, big 5 / other leagues: 2015/16 202 / 204, 2016/17 264 / 262,
-      2017/18 282 / 281, 2018/19 343 / 336, 2019/20 297 / 322, 2020/21
-      389 / 474, 2021/22 499 / 531, 2022/23 539 / 568.
+  for later milestones; `split.csv` stays the milestone 1 split. With EA FC
+  adopted alongside Understat (D11), there are two candidate test seasons:
+  - **After 2020/21** (≈ 390): both Understat and EA FC features exist, so
+    the test rows look like the training rows.
+  - **After 2022/23** (≈ 540, normal 2023/24 labels): more recent and
+    larger, but EA FC only, because Understat stops at 2020/21. The model
+    would have to cope with missing Understat features, or be compared as
+    an EA-only model.
+- **D13. Selling clubs outside the big 5?** EA FC covers more leagues than
+  Understat. With non-big-5 selling clubs, N is ≈ 5,800 over 2015/16 –
+  2022/23, vs ≈ 2,800 big-5 only.
+  - The 5,800 is an **upper bound**. It counts every league Transfermarkt
+    tracks, but EA's licensed leagues change by edition (e.g. Russia removed
+    in 2022; Ukraine and Serbia mostly missing; generated names for some
+    Brazilian players).
+  - Those transfers would have EA features but **no Understat features**,
+    because Understat only covers the big 5.
+  - The estimate uses the D7 method, re-run 2026-11-04 with the old
+    all-competitions label (D2 lowers it slightly). Per feature season, big
+    5 / other leagues: 2015/16 202 / 204, 2016/17 264 / 262, 2017/18
+    282 / 281, 2018/19 343 / 336, 2019/20 297 / 322, 2020/21 389 / 474,
+    2021/22 499 / 531, 2022/23 539 / 568.
 
-    This is a question, not a change: §6 keeps big-5 selling clubs until
-    the team decides.
+  Until the team decides, §6 keeps big-5 selling clubs.
 
 ### Made
 
@@ -228,6 +206,27 @@ come from **player–team fit** and from **more data**.
        cross-validation.
   - The clustering itself stays Wyscout-based, and no milestone 1
     deliverable depends on EA. If the add-on causes trouble, drop it.
+- **D8. Understat is acceptable** (2026-11-04, approved by the professor):
+  use the published copy (`douglasbc/scraping-understat-dataset`, commit
+  `87960c2`) for the course project. Understat's `robots.txt` asks not to be
+  crawled and the copy has no licence, so the conditions stay as rules:
+  - never scrape Understat ourselves
+  - never commit or redistribute the files
+  - credit both Understat and the copy in any write-up
+- **D11. EA FC is a player-feature source for the multi-season dataset**
+  (2026-11-04, approved by the professor). It **complements** Understat,
+  since D8 keeps Understat. The professor accepted all three questions:
+  1. the change of player-feature source
+  2. EA ratings as features, even though they are expert opinions rather
+     than observed events (the label stays observed Transfermarkt playing
+     time)
+  3. the licence: Kaggle lists CC0 (checked 2026-11-03, version 4)
+
+  Why EA FC: Understat describes players mostly through attacking (the D7
+  trade-off, weak for defenders). EA FC rates passing, defending, physical
+  and mental attributes for every position, across feature seasons
+  2015/16 – 2022/23. §6 item 6 describes how it's used; selling clubs
+  outside the big 5 are still open (D13).
 
 ## 4. Rules for every agent and team member
 
@@ -346,6 +345,17 @@ are pre-transfer.
 
 ## 6. Multi-season dataset (first milestone after milestone 1)
 
+**Build order** (decided 2026-11-04; keeps D8 and D11, only orders the work):
+
+- **First: Transfermarkt + EA FC.** EA matching is easier (it has dates of
+  birth), and EA describes every position.
+- **Next: Understat team profiles,** when building team style: team xG
+  for/against and shot locations and situations, per club and season. They
+  are our main *observed* multi-season source for team style and strength.
+- **Last: Understat player features, and only if they improve validation
+  scores.** They add observed quality measures (xG, xA, `xGChain`,
+  `xGBuildup`), mainly for attackers, and serve as a check on EA's ratings.
+
 1. **Transfers and labels:**
    - Generalise notebook 01's funnel and `time_share` label to every feature
      season the player sources cover: 2014/15 – 2020/21 for Understat,
@@ -375,13 +385,25 @@ are pre-transfer.
    - team xG for/against and shot profile from Understat shots
    - squad depth per position from Transfermarkt minutes
    - possibly EA FC team ratings and tactics settings (item 6)
-5. **Coverage:** Understat only covers the big 5, so the **player** features
-   need a big-5 feature season; destinations can be anywhere Transfermarkt
-   covers. EA FC covers more selling leagues, but §6 stays big-5 until the
-   D11 team question is decided. Report the funnel per season, as in
-   milestone 1.
-6. **EA FC player features** (D11 for the multi-season dataset; the 2017/18
-   part is also milestone 1's light add-on, D12):
+5. **Coverage:**
+   - Understat only covers the big 5, so the **player** features need a
+     big-5 feature season; destinations can be anywhere Transfermarkt
+     covers. EA FC covers more selling leagues, but §6 stays big-5 until D13
+     is decided.
+   - **The two player sources cover different seasons** (D8, D11):
+
+     | Feature seasons | Player features available |
+     |---|---|
+     | 2014/15 | Understat only (no EA update before the window) |
+     | 2015/16 – 2020/21 | Understat **and** EA FC |
+     | 2021/22 – 2022/23 | EA FC only (the Understat copy stops at 2020/21) |
+
+     Keep every row and add a "source available" flag per source, so the
+     model learns from missing features instead of dropping seasons. The
+     choice of test season interacts with this (D10).
+   - Report the funnel per season and per source, as in milestone 1.
+6. **EA FC player features** (D11, adopted for the multi-season dataset;
+   the 2017/18 part is also milestone 1's light add-on, D12):
    - **EA ↔ Transfermarkt player matching:**
      - EA has dates of birth, so reuse milestone 1's date-of-birth +
        fuzzy-name matcher.
@@ -413,9 +435,12 @@ are pre-transfer.
        `overall`, `potential`,
        `height_cm`, `weight_kg`, `weak_foot`, and `work_rate` split into
        attacking and defensive.
-     - Drop: `skill_moves` (decided 2026-11-04), the per-position ratings
-       (`ls` … `gk`, stored as text like "85+2"), image URLs, `real_face`, `body_type`, and `value_eur` /
-       `wage_eur` / `release_clause_eur` (market value stays Transfermarkt).
+     - Drop:
+       - `skill_moves` (decided 2026-11-04)
+       - the per-position ratings (`ls` … `gk`, stored as text like "85+2")
+       - image URLs, `real_face` and `body_type`
+       - `value_eur`, `wage_eur` and `release_clause_eur` (market value
+         stays Transfermarkt)
      - Standardise attributes within each `fifa_version`, because rating
        scales drift between editions.
    - **Coverage:**
@@ -465,7 +490,7 @@ only input to the models.
 Start simple and add only what validation supports:
 
 1. **MLP:** concatenate baseline, player and destination team features
-   (player features include EA FC attributes if D11 is adopted).
+   (player features include Understat and EA FC attributes, D8 and D11).
    Learned embeddings for categorical inputs (position, league), and a
    sigmoid output because y is between 0 and 1. Trained with MSE. Width and
    depth are chosen by validation.
@@ -486,7 +511,8 @@ more than the spread of the validation scores. The milestone 1 version
 
 - Wyscout covers one season (2017/18) and the top five leagues only. The
   multi-season dataset has broader coverage but less detail on each player,
-  especially defenders, unless EA FC attributes are adopted (D11).
+  especially defenders. EA FC attributes (D11) fill that gap, but as expert
+  ratings rather than observed events.
 - Milestone 1 has 276 examples: small-sample noise, so differences in MSE
   need cross-validation standard deviations alongside them.
 - Injuries are not modelled, and manager changes after the transfer (56% of
@@ -496,7 +522,8 @@ more than the spread of the validation scores. The milestone 1 version
 - The label counts league games only (D2): cup and European minutes are
   ignored, and clubs in leagues Transfermarkt doesn't track get no label.
   COVID affects the labels for two seasons (D9).
-- Understat data is a third-party scrape with no licence (D8).
+- Understat data is a third-party scrape with no licence, approved by the
+  professor for this course project (D8).
 - EA FC attributes are expert ratings, not observed events. They are shaped
   by reputation and less accurate for smaller leagues. Rating scales also
   drift between game editions, and EA's licensed leagues change by edition

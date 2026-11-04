@@ -18,13 +18,14 @@ clusters will support interpretation of the recommendations.
   [Club-Football-Match-Data](https://github.com/xgabora/Club-Football-Match-Data) archive
 - [Understat](https://understat.com/) player and shot data, via the published
   [scraping-understat-dataset](https://github.com/douglasbc/scraping-understat-dataset)
-  copy (2014/15–2020/21). We never scrape Understat ourselves; see decision D8
-  in [Plan.md](Plan.md)
+  copy (2014/15–2020/21), approved by the professor for this course project.
+  We never scrape Understat ourselves or redistribute the files; see decision
+  D8 in [Plan.md](Plan.md)
 - [EA Sports FC 24 complete player dataset](https://www.kaggle.com/datasets/stefanoleone992/ea-sports-fc-24-complete-player-dataset)
   (Kaggle, CC0): EA's player ratings for every game update from FIFA 15 to
   EA FC 24. These are expert ratings, not observed events. Used lightly in
-  milestone 1 (decision D12) and proposed for the multi-season dataset
-  (decision D11)
+  milestone 1 (decision D12) and a player-feature source for the multi-season
+  dataset, approved by the professor (decision D11)
 
 The data files are not committed to this repository. Keep downloaded or
 generated data under the local `data/` directories described in the project
@@ -67,7 +68,7 @@ The full plan, status, open decisions, and evaluation rules are in
    doesn't depend on EA FC.
 5. ⬜ Later milestones:
    - a multi-season dataset: Transfermarkt plus Understat (2014/15–2020/21,
-     ~1,950 transfers) and/or EA FC (2015/16–2022/23, ~2,800 transfers
+     ~1,950 transfers) and EA FC (2015/16–2022/23, ~2,800 transfers
      from big-5 selling clubs)
    - team style features and clustering
    - team weakness features

@@ -51,9 +51,9 @@ and **one clustering: player roles**, on Wyscout 2017/18 with a small model.
   on the role clusters and optional baseline features. No milestone 1
   deliverable may depend on it.
 - **After milestone 1,** a multi-season dataset supports a larger neural fit
-  model. It uses Transfermarkt plus Understat and/or EA FC player features
-  (decisions D8, D11): ~1,950 transfers with Understat, ~2,800 with EA FC
-  (big-5 selling clubs).
+  model. It uses Transfermarkt, Understat and EA FC player features, both
+  approved by the professor (decisions D8, D11): ~1,950 transfers with
+  Understat, ~2,800 with EA FC (big-5 selling clubs).
 - **Then:** team-style features and clustering, team weakness, and the final
   evaluation.
 

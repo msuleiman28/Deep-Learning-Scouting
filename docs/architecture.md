@@ -35,7 +35,8 @@ scope. Milestone 1 uses Wyscout 2017/18 (276 transfers), with EA FC ratings
 as a light add-on that no deliverable depends on (`Plan.md`, decision D12).
 
 After milestone 1, a multi-season dataset uses Transfermarkt player-season
-features plus Understat and/or EA FC (decisions D7, D8, D11):
+features plus Understat and EA FC, both approved by the professor (decisions
+D7, D8, D11):
 - Understat (2014/15–2020/21 feature seasons): about 1,950 transfers.
 - EA FC (2015/16–2022/23): about 2,800 transfers from big-5 selling clubs, and
   up to about 5,800 if selling clubs outside the big 5 are allowed.
@@ -100,5 +101,6 @@ final evaluation; all model choices are made on training/validation data.
 - **Milestone 1:** the fixed held-out split in `data/processed/split.csv`,
   with cross-validation on the training rows.
 - **Later milestones:** a time-based split (decision D10 in `Plan.md`). Test
-  on transfers after the 2020/21 season, or after 2022/23 if EA FC is
-  adopted (D11), and train/validate on earlier seasons.
+  on transfers after the 2020/21 season (Understat and EA FC features), or
+  after 2022/23 (EA FC only, since Understat stops at 2020/21), and
+  train/validate on earlier seasons.

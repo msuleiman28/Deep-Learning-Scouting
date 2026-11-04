@@ -63,7 +63,7 @@ The full plan, status, open decisions, and evaluation rules are in
 3. ✅ Constant-mean and linear-regression baselines on a fixed split
    (`data/processed/split.csv`). The constant mean is currently the bar to beat
    (cross-validation MSE 0.0815; test MSE 0.0973).
-4. ⬜ Player-role clustering (completes milestone 1), with an optional EA FC
+4. ✅ Player-role clustering: 12 roles within positions. Optional: an EA FC
    check of the clusters and optional EA FC baseline features. Milestone 1
    doesn't depend on EA FC.
 5. ⬜ Later milestones:
@@ -84,6 +84,8 @@ multi-season dataset removes that limit for later milestones.
   baselines.
 - `02_club_context_features.ipynb`: ClubElo team strength and destination
   manager features.
+- `03_player_roles.ipynb`: player-role clustering (12 roles within positions);
+  needs `python -m src.pipelines.build_player_features` first.
 
 ## Building feature tables
 

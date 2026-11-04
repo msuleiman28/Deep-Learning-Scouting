@@ -35,7 +35,7 @@ milestones.
 | Fixed train/test split (`data/processed/split.csv`) | ✅ 220 train / 56 test (regenerated for D2) |
 | Constant-mean and linear-regression baselines | ✅ cross-validation MSE 0.0815 / 0.0865; test MSE 0.0973 / 0.1012 |
 | Player features table for clustering (§5, step 3): per-90 stats + location features, 2,561 players | ✅ `data/processed/player_features.csv` |
-| **Player-role clustering** (§5) | ⬜ to do |
+| **Player-role clustering** (§5, D14): 12 roles, 1,947 players | ✅ `data/processed/player_roles.csv`, `notebooks/03_player_roles.ipynb` |
 | EA FC light add-on (D12): download, 2017/18 matching, role-cluster check, optional baseline features | ⬜ to do, **not a dependency** |
 | Milestone 1 write-up: match rate, funnel, baselines, roles | ⬜ to do |
 
@@ -228,6 +228,30 @@ come from **player–team fit** and from **more data**.
   and mental attributes for every position, across feature seasons
   2015/16 – 2022/23. §6 item 6 describes how it's used; selling clubs
   outside the big 5 are still open (D13).
+- **D14. Player roles: k and names** (2026-11-04):
+  - **k per position:** defenders 4, midfielders 4, forwards 3. Each is the
+    largest k that stays stable when the data is resampled (adjusted Rand
+    index 0.89 / 0.79 / 0.88). Silhouette always prefers k = 2, which only
+    separates central from wide players.
+  - **Forwards at k = 4** would split strikers into "target striker" vs
+    "finisher". That's football-meaningful, but unstable: ARI 0.62 when
+    resampled, and 0.91 even with just a different random start on the same
+    data, vs 1.00 for k = 3. 21 creative forwards switch sides, and two
+    clusters have only ~80 players. If that distinction matters later, use
+    a Gaussian mixture (soft probabilities) or a continuous feature, rather
+    than a fourth hard cluster.
+  - **Names and anchor players:** each role is named by the cluster
+    containing its anchor (k-means numbers clusters arbitrarily).
+
+    | Position | Roles (anchor) |
+    |---|---|
+    | DF | Attacking full-back (Bertrand), Defensive full-back (Zabaleta), Ball-playing centre-back (Bonucci), Defensive centre-back (Maguire) |
+    | MD | Attacking midfielder (De Bruyne), Deep-lying midfielder (Busquets), Ball-winning midfielder (Saúl), Wide midfielder (Perišić) |
+    | FW | Creative forward (Messi), Central striker (Kane), Wide support forward (Gerard Moreno) |
+    | GK | Goalkeeper (one role, not clustered) |
+  - **"Deep-lying midfielder", not "playmaker":** Kanté and Casemiro share
+    that role with Busquets and Jorginho, because per-90 counts partly
+    reflect team possession (see §9).
 
 ## 4. Rules for every agent and team member
 
@@ -365,6 +389,32 @@ for example "ball-winning midfielder" vs "deep playmaker".
    for the 276 transfers. Whether roles help the model is decided later, by
    cross-validation.
 
+**Built (2026-11-04):** `src/features/player_roles.py` and
+`notebooks/03_player_roles.ipynb`; k and names in D14.
+- **Features (12):** `passes_p90`, `pass_acc`, `progressive_passes_p90`,
+  `key_passes_p90`, `crosses_p90`, `shots_p90`, `dribbles_p90`,
+  `duels_p90`, `interceptions_p90`, `avg_x`, `avg_width`,
+  `final_third_share`. Left out: goals and assists (outcome-driven), duels
+  won (duplicates duels), fouls (discipline) and `avg_y` (side, not role).
+- **Preprocessing:** `log1p` on per-90 counts, then z-scored within each
+  position.
+- **Method:** k-means, seed 42, 20 starts.
+- **Stability:** 50 bootstrap refits per k, compared with the adjusted Rand
+  index.
+- **Famous-player check passed:**
+  - Marcelo and Kimmich are attacking full-backs
+  - Ramos and Hummels are ball-playing centre-backs
+  - Modrić and De Bruyne are attacking midfielders
+  - Messi, Neymar and Griezmann are creative forwards
+  - Kane and Lewandowski are central strikers
+- **Roles of the 276 transfers (descriptive, noisy):** all have a role.
+  - Highest mean y: central strikers 0.56, goalkeepers 0.56, deep-lying
+    midfielders 0.55.
+  - Lowest: attacking midfielders 0.37, wide support forwards 0.40.
+  - With 17–36 transfers per role and a spread of about 0.3, these
+    differences aren't evidence yet.
+- **Not done (optional):** a Gaussian mixture for soft role probabilities.
+
 Leakage: 2017/18 data only, and every transfer is after May 2018, so the roles
 are pre-transfer.
 
@@ -491,7 +541,7 @@ simple join. All tables live in `data/processed/` unless noted.
 | `transfers_joined.csv` | `player_id, wy_id, transfer_date, to_club_id` | label `y`, baseline features (Wyscout 2017/18) | label: 365 days after the transfer; features: before it | 1 ✅ |
 | `split.csv` | same as above | `train` / `test` | fixed | 1 ✅ |
 | `player_features.csv` | `wy_id` | identity, role, minutes, per-90 event stats, pass accuracy, location features | 2017/18 season | 1 ✅ |
-| `player_roles.csv` | `wy_id` | broad position, role cluster, role probabilities | 2017/18 season | 1 |
+| `player_roles.csv` | `wy_id` | position, role cluster, role name, distance to the cluster centre | 2017/18 season | 1 ✅ |
 | `transfers_multiseason.csv` | `player_id, transfer_date, to_club_id` | label `y`, `feature_season`, `covid_label`, split | as above, per season | later |
 | `data/interim/understat_tm_link.csv` | `understat_id, season ↔ player_id` | match with score | — | later |
 | `player_season_features.csv` | `player_id, feature_season` | Transfermarkt + Understat player features | feature season | later |
@@ -541,6 +591,10 @@ more than the spread of the validation scores. The milestone 1 version
   ratings rather than observed events.
 - Milestone 1 has 276 examples: small-sample noise, so differences in MSE
   need cross-validation standard deviations alongside them.
+- Player roles come from per-90 counts that partly reflect **team
+  possession**, not only the player (D14): e.g. Kanté shares a role with
+  Busquets. Midfielder roles are the least stable (ARI 0.79). Possession-
+  adjusted stats are a possible improvement.
 - Injuries are not modelled, and manager changes after the transfer (56% of
   destination clubs within the label window) can't be predicted.
 - Transfermarkt coverage is limited to tracked leagues; transfers to uncovered

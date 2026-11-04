@@ -31,7 +31,7 @@ ClubElo ratings ─────> club context (Elo, manager tenure) ────
 
 The Wyscout data primarily covers the 2017/18 season in the top five leagues,
 while Transfermarkt supplies transfer and appearance records over a broader
-scope. Milestone 1 uses Wyscout 2017/18 (278 transfers), with EA FC ratings
+scope. Milestone 1 uses Wyscout 2017/18 (276 transfers), with EA FC ratings
 as a light add-on that no deliverable depends on (`Plan.md`, decision D12).
 
 After milestone 1, a multi-season dataset uses Transfermarkt player-season
@@ -77,12 +77,13 @@ playing_time_share = minutes_played_by_player_in_first_12_months
 ```
 
 Implemented in `notebooks/01_join_and_baselines.ipynb` (`time_share`):
-available minutes = 90 × the destination club's matches recorded by
-Transfermarkt in [transfer date, transfer date + 365 days), across all
-competitions (league, cups, Europe), capped at 1. Clubs with fewer than 10
-recorded matches in the window get no label and are dropped rather than given
-a fake 0. Whether to count league matches only is open decision D2 in
-`Plan.md`.
+the player's league minutes for the new club ÷ (90 × the club's league matches
+recorded by Transfermarkt in [transfer date, transfer date + 365 days)),
+capped at 1. Only league matches count (Transfermarkt
+`competition_type == "domestic_league"`; decision D2 in `Plan.md`), so
+players aren't penalised for cup or European games they weren't registered
+for. Clubs with fewer than 10 recorded league matches in the window get no
+label and are dropped rather than given a fake 0.
 
 ## Modelling stages
 

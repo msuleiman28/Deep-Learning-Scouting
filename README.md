@@ -57,10 +57,11 @@ The full plan, status, open decisions, and evaluation rules are in
 [Plan.md](Plan.md). Current state:
 
 1. ✅ Wyscout ↔ Transfermarkt player matching: 98.5% of players matched.
-2. ✅ Post-transfer 12-month playing-time label: **278** eligible transfers.
+2. ✅ Post-transfer 12-month playing-time label (league games only):
+   **276** eligible transfers.
 3. ✅ Constant-mean and linear-regression baselines on a fixed split
    (`data/processed/split.csv`). The constant mean is currently the bar to beat
-   (test MSE 0.0833).
+   (cross-validation MSE 0.0815; test MSE 0.0973).
 4. ⬜ Player-role clustering (completes milestone 1), with an optional EA FC
    check of the clusters and optional EA FC baseline features. Milestone 1
    doesn't depend on EA FC.

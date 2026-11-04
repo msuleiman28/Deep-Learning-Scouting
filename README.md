@@ -115,6 +115,14 @@ Spain) into `data/raw/wyscout/`, and the six Transfermarkt tables into
 `data/raw/clubelo/`, and Understat player-season and shot files (big 5,
 2014/15–2020/21) into `data/raw/understat/`. It needs only the Python standard library.
 
+- **The notebooks do this automatically:** their first code cell calls
+  `download_all()` from the same script, so a notebook runs on its own from a
+  fresh clone. From your own Python code:
+
+  ```python
+  from src.data.download_data import download_all
+  download_all()   # raises DownloadError listing any failed files
+  ```
 - Files already downloaded are skipped, so re-run it to retry any failures.
 - Use `--force` to re-download everything.
 - EA FC isn't in the script yet. When it's added, it will need a Kaggle API

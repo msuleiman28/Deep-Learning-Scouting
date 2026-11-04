@@ -34,6 +34,7 @@ milestones.
 | 12-month playing-time label (league games only, D2) + transfer funnel | ✅ N = 276 eligible transfers |
 | Fixed train/test split (`data/processed/split.csv`) | ✅ 220 train / 56 test (regenerated for D2) |
 | Constant-mean and linear-regression baselines | ✅ cross-validation MSE 0.0815 / 0.0865; test MSE 0.0973 / 0.1012 |
+| Player features table for clustering (§5, step 3): per-90 stats + location features, 2,561 players | ✅ `data/processed/player_features.csv` |
 | **Player-role clustering** (§5) | ⬜ to do |
 | EA FC light add-on (D12): download, 2017/18 matching, role-cluster check, optional baseline features | ⬜ to do, **not a dependency** |
 | Milestone 1 write-up: match rate, funnel, baselines, roles | ⬜ to do |
@@ -317,6 +318,30 @@ for example "ball-winning midfielder" vs "deep playmaker".
    - crosses, dribbles and progressive passes per 90
 
    Standardise within each position. Keep it to about 10–15 features.
+
+   **Built (2026-11-04):** `python -m src.pipelines.build_player_features`
+   writes `data/processed/player_features.csv`. The code is in
+   `src/features/player_features.py`, whose docstring has the exact
+   definitions.
+   - One row per player with 2017/18 league minutes (2,561; 1,947 with
+     ≥ 450 minutes). Minutes are kept, so each user applies their own
+     threshold.
+   - The original per-90 columns match notebook 01 exactly for all 276
+     transfers.
+   - **Use `avg_width` (distance from the centre line), not `avg_y`, for
+     roles:** a left-back and a right-back play the same role.
+   - **Dribbles** are take-ons (Wyscout tags 503/504). **Progressive passes**
+     are accurate passes ending ≥ 25% closer to goal, measured in metres.
+   - **Data quirk handled:** goal kicks and goalkeeper save events have
+     placeholder positions, (0, 0) or (100, 100), and are left out of the
+     location averages.
+   - **Known limitation:** goalkeepers' long launches count as progressive
+     passes. Goalkeepers aren't clustered, so this doesn't affect roles.
+   - **Sanity checks passed:** average x rises GK 12 → DF 41 → MD 53 → FW 64,
+     and the leaders look right:
+     - dribbles: Neymar, Januzaj, Messi
+     - crosses: Candreva, Marcelo, Zappacosta
+     - progressive passes: Fàbregas, Banega, Boateng
 4. **Method:** k-means as the main method, testing k = 2–6 per position and
    choosing k by silhouette score **and** whether the clusters can be named.
    Optionally use a Gaussian mixture as well, to get soft role probabilities
@@ -465,6 +490,7 @@ simple join. All tables live in `data/processed/` unless noted.
 |---|---|---|---|---|
 | `transfers_joined.csv` | `player_id, wy_id, transfer_date, to_club_id` | label `y`, baseline features (Wyscout 2017/18) | label: 365 days after the transfer; features: before it | 1 ✅ |
 | `split.csv` | same as above | `train` / `test` | fixed | 1 ✅ |
+| `player_features.csv` | `wy_id` | identity, role, minutes, per-90 event stats, pass accuracy, location features | 2017/18 season | 1 ✅ |
 | `player_roles.csv` | `wy_id` | broad position, role cluster, role probabilities | 2017/18 season | 1 |
 | `transfers_multiseason.csv` | `player_id, transfer_date, to_club_id` | label `y`, `feature_season`, `covid_label`, split | as above, per season | later |
 | `data/interim/understat_tm_link.csv` | `understat_id, season ↔ player_id` | match with score | — | later |

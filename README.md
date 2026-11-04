@@ -85,6 +85,19 @@ multi-season dataset removes that limit for later milestones.
 - `02_club_context_features.ipynb`: ClubElo team strength and destination
   manager features.
 
+## Building feature tables
+
+From the repository root, after downloading the data:
+
+```bash
+python -m src.pipelines.build_player_features   # data/processed/player_features.csv (~1 min)
+```
+
+One row per Wyscout player with 2017/18 league minutes: minutes, per-90 event
+stats and location features (average position, width, final-third share,
+crosses, dribbles, progressive passes). Definitions are in
+`src/features/player_features.py`.
+
 ## Downloading the data
 
 From the repository root, on Windows, macOS, or Linux:

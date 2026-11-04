@@ -14,6 +14,17 @@ clusters will support interpretation of the recommendations.
 
 - [Wyscout Soccer Match Event Dataset](https://figshare.com/collections/Soccer_match_event_dataset/4415000)
 - [Transfermarkt datasets](https://github.com/dcaribou/transfermarkt-datasets)
+- [ClubElo](https://clubelo.com/) ratings, via the
+  [Club-Football-Match-Data](https://github.com/xgabora/Club-Football-Match-Data) archive
+- [Understat](https://understat.com/) player and shot data, via the published
+  [scraping-understat-dataset](https://github.com/douglasbc/scraping-understat-dataset)
+  copy (2014/15–2020/21). We never scrape Understat ourselves; see decision D8
+  in [Plan.md](Plan.md)
+- [EA Sports FC 24 complete player dataset](https://www.kaggle.com/datasets/stefanoleone992/ea-sports-fc-24-complete-player-dataset)
+  (Kaggle, CC0): EA's player ratings for every game update from FIFA 15 to
+  EA FC 24. These are expert ratings, not observed events. Used lightly in
+  milestone 1 (decision D12) and proposed for the multi-season dataset
+  (decision D11)
 
 The data files are not committed to this repository. Keep downloaded or
 generated data under the local `data/` directories described in the project
@@ -40,18 +51,37 @@ structure.
 └── AGENTS.md
 ```
 
-## Initial modelling plan
+## Plan and status
 
-1. Prepare Wyscout event and player features.
-2. Prepare Transfermarkt transfer and appearance outcomes.
-3. Match players and create one historical transfer example per row.
-4. Calculate post-transfer playing-time share over the following 12 months.
-5. Establish a mean predictor and linear-regression baseline.
-6. Add role/style clusters, team weakness vectors, and the neural fit model.
+The full plan, status, open decisions, and evaluation rules are in
+[Plan.md](Plan.md). Current state:
 
-The first data milestone is to report the cross-dataset match rate and the
-number of eligible transfers. If fewer than approximately 300 reliable
-examples remain, model capacity and feature count will be reduced.
+1. ✅ Wyscout ↔ Transfermarkt player matching: 98.5% of players matched.
+2. ✅ Post-transfer 12-month playing-time label: **278** eligible transfers.
+3. ✅ Constant-mean and linear-regression baselines on a fixed split
+   (`data/processed/split.csv`). The constant mean is currently the bar to beat
+   (test MSE 0.0833).
+4. ⬜ Player-role clustering (completes milestone 1), with an optional EA FC
+   check of the clusters and optional EA FC baseline features. Milestone 1
+   doesn't depend on EA FC.
+5. ⬜ Later milestones:
+   - a multi-season dataset: Transfermarkt plus Understat (2014/15–2020/21,
+     ~1,950 transfers) and/or EA FC (2015/16–2022/23, ~2,800 transfers
+     from big-5 selling clubs)
+   - team style features and clustering
+   - team weakness features
+   - a neural player–team fit model
+   - evaluation and case studies
+
+Milestone 1 has fewer than ~300 examples, so its model stays small; the
+multi-season dataset removes that limit for later milestones.
+
+## Notebooks
+
+- `01_join_and_baselines.ipynb`: player matching, label, transfer funnel,
+  baselines.
+- `02_club_context_features.ipynb`: ClubElo team strength and destination
+  manager features.
 
 ## Downloading the data
 
@@ -64,10 +94,15 @@ python src/data/download_data.py
 This fetches the Wyscout files (`players.json`, `teams.json`, and
 `matches_*.json` / `events_*.json` for England, France, Germany, Italy, and
 Spain) into `data/raw/wyscout/`, and the six Transfermarkt tables into
-`data/raw/transfermarkt/`. It needs only the Python standard library.
+`data/raw/transfermarkt/`, ClubElo team-strength ratings into
+`data/raw/clubelo/`, and Understat player-season and shot files (big 5,
+2014/15–2020/21) into `data/raw/understat/`. It needs only the Python standard library.
 
 - Files already downloaded are skipped, so re-run it to retry any failures.
 - Use `--force` to re-download everything.
+- EA FC isn't in the script yet. When it's added, it will need a Kaggle API
+  token, with a manual download from the Kaggle page as the fallback (see
+  [Plan.md](Plan.md) §4).
 - Transfermarkt is pinned to the snapshot published 2026-09-05 (data current
   to 2026-07-06). Every file is checked against a stored MD5, so everyone
   works on identical data. If a check fails, upstream has changed the file:

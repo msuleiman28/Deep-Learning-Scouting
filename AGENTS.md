@@ -1,5 +1,11 @@
 # Project Guide
 
+**Read [Plan.md](Plan.md) before starting any work.** It sets the scope, the
+order of work, the open decisions, the evaluation protocol, and the data
+hand-offs between team members. Work outside the plan needs team agreement
+first, and the plan's Status and Decisions sections must be updated when
+something changes.
+
 ## Pair-programming and teaching
 
 Every agent working on this repository acts as a pair programmer and teacher.
@@ -31,15 +37,30 @@ playing-time share during the first 12 months after a transfer.
   judgement. Record known coverage, injury, manager, and historical-data
   limitations.
 
-## Data ownership
+## Task assignment
 
-- Wyscout events and player features: Kareem
-- Transfermarkt transfers, appearances, outcomes, and cross-dataset matching:
-  Hussein
-- Player-role features and clusters: Mohammed
-- Team-style and weakness features: Yuri
+Tasks have no fixed owners: anyone can work on any task in
+[Plan.md](Plan.md). Say which task you are taking so work isn't duplicated.
 
 ## Current scope
 
-This is the initial project structure. Training code, experiments, and
-additional project documentation will be added incrementally.
+See [Plan.md](Plan.md). Milestone 1 is the join, the label, the baselines,
+and **one clustering: player roles**, on Wyscout 2017/18 with a small model.
+
+- **EA FC in milestone 1** is a light add-on (decision D12): an outside check
+  on the role clusters and optional baseline features. No milestone 1
+  deliverable may depend on it.
+- **After milestone 1,** a multi-season dataset supports a larger neural fit
+  model. It uses Transfermarkt plus Understat and/or EA FC player features
+  (decisions D8, D11): ~1,950 transfers with Understat, ~2,800 with EA FC
+  (big-5 selling clubs).
+- **Then:** team-style features and clustering, team weakness, and the final
+  evaluation.
+
+Rules:
+- Test data is used only for the final evaluation; all choices are made on
+  training/validation data.
+- EA FC features use each player's latest update on or before 15 May before
+  the transfer window.
+- Never scrape Understat, and never commit or redistribute raw data (Understat,
+  EA FC or any other source).

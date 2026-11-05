@@ -235,6 +235,10 @@ come from **player–team fit** and from **more data**.
   - **Notebook:** `notebooks/04_milestone1.ipynb`, standalone. It downloads
     data and builds missing tables with `src/`; notebooks 01–03 stay as the
     working behind it.
+  - **Kept simple (2026-11-05):** the baselines and models are written inline
+    with plain pandas and scikit-learn (`src/models/` was removed). Each
+    section has a "notes for the write-up" cell for the team to replace with
+    their own text.
   - **Split on the player:** one transfer each, so 0 players on both sides.
     Destination-club overlap (32 of 111 clubs; 80% of test transfers) is
     reported as a caveat; the shared split is unchanged.
@@ -252,8 +256,8 @@ come from **player–team fit** and from **more data**.
     "improves" test MSE to 0.070, showing why every feature must be dated
     before the transfer.
   - **Optimisation checks:**
-    - 20-row check: 91% fit. Only 19 independent parameters (verified rank),
-      so an exact fit isn't possible; a 15-row check fits exactly.
+    - 20-row check: about 98% fit (MSE 0.002). Only 19 independent
+      parameters (verified rank), so an exact fit isn't possible.
     - SGD training curve: validation MSE is lowest after ~7 passes and never
       below the average (overfitting).
 - **D14. Player roles: k and names** (2026-11-04):

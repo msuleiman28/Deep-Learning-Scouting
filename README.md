@@ -46,7 +46,6 @@ structure.
 ├── src/
 │   ├── data/         # Loading, cleaning, and cross-dataset matching
 │   ├── features/     # Player, team, role, style, and weakness features
-│   ├── models/       # Baselines and neural fit model
 │   ├── pipelines/    # End-to-end training and scoring workflows
 │   └── visualization/ # Clusters, diagnostics, and scouting outputs
 └── AGENTS.md

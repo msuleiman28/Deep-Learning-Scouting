@@ -32,6 +32,7 @@ milestones.
 | Reproducible, pinned data download (`src/data/download_data.py`) | ✅ done |
 | Player matching Wyscout ↔ Transfermarkt | ✅ 98.5% matched (2,523 / 2,561) |
 | 12-month playing-time label (league games only, D2) + transfer funnel | ✅ N = 276 eligible transfers |
+| Matching, label and funnel moved into `src/` (`python -m src.pipelines.build_transfers`), reproducing notebook 01 exactly | ✅ |
 | Fixed train/test split (`data/processed/split.csv`) | ✅ 220 train / 56 test (regenerated for D2) |
 | Constant-mean and linear-regression baselines | ✅ cross-validation MSE 0.0815 / 0.0865; test MSE 0.0973 / 0.1012 |
 | Player features table for clustering (§5, step 3): per-90 stats + location features, 2,561 players | ✅ `data/processed/player_features.csv` |
@@ -440,7 +441,12 @@ are pre-transfer.
      move per player, destination club with ≥ 10 recorded league games, and the
      league-only label (D2).
    - Add `feature_season` and `covid_label` columns.
-   - Move the logic into `src/` so both datasets share it.
+   - Move the logic into `src/` so both datasets share it. **Done for
+     milestone 1 (2026-11-05):** `src/data/player_matching.py`,
+     `src/features/labels.py` and `src/pipelines/build_transfers.py`, which
+     reproduce notebook 01's link table and split byte-for-byte and its
+     baselines to 17 decimals. The multi-season version extends these
+     instead of copying them.
 2. **Understat ↔ Transfermarkt player matching:**
    - Understat has no dates of birth, so match by name, constrained to the
      same club and season (Transfermarkt appearances give each player's club
@@ -538,7 +544,7 @@ simple join. All tables live in `data/processed/` unless noted.
 
 | File | Key | Content | Time window | Milestone |
 |---|---|---|---|---|
-| `transfers_joined.csv` | `player_id, wy_id, transfer_date, to_club_id` | label `y`, baseline features (Wyscout 2017/18) | label: 365 days after the transfer; features: before it | 1 ✅ |
+| `transfers_joined.csv` | `player_id, wy_id, transfer_date, to_club_id` | label `y`, baseline features (Wyscout 2017/18), built by `src/pipelines/build_transfers.py` | label: 365 days after the transfer; features: before it | 1 ✅ |
 | `split.csv` | same as above | `train` / `test` | fixed | 1 ✅ |
 | `player_features.csv` | `wy_id` | identity, role, minutes, per-90 event stats, pass accuracy, location features | 2017/18 season | 1 ✅ |
 | `player_roles.csv` | `wy_id` | position, role cluster, role name, distance to the cluster centre | 2017/18 season | 1 ✅ |

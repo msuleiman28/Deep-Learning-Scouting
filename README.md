@@ -79,12 +79,15 @@ multi-season dataset removes that limit for later milestones.
 
 ## Notebooks
 
+`notebooks/side_work/` holds the working behind milestone 1:
+
 - `01_join_and_baselines.ipynb`: player matching, label, transfer funnel,
   baselines.
 - `02_club_context_features.ipynb`: ClubElo team strength and destination
   manager features.
 - `03_player_roles.ipynb`: player-role clustering (12 roles within positions);
   needs `python -m src.pipelines.build_player_features` first.
+
 - `04_milestone1.ipynb`: **the milestone 1 hand-in.** It covers the data, the
   split, the model, the error with baselines, the optimisation checks, and the
   player roles. It runs on its own from a fresh clone, downloading and building

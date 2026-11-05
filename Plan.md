@@ -36,7 +36,7 @@ milestones.
 | Fixed train/test split (`data/processed/split.csv`) | ✅ 220 train / 56 test (regenerated for D2) |
 | Constant-mean and linear-regression baselines | ✅ cross-validation MSE 0.0815 / 0.0865; test MSE 0.0973 / 0.1012 |
 | Player features table for clustering (§5, step 3): per-90 stats + location features, 2,561 players | ✅ `data/processed/player_features.csv` |
-| **Player-role clustering** (§5, D14): 12 roles, 1,947 players | ✅ `data/processed/player_roles.csv`, `notebooks/03_player_roles.ipynb` |
+| **Player-role clustering** (§5, D14): 12 roles, 1,947 players | ✅ `data/processed/player_roles.csv`, `notebooks/side_work/03_player_roles.ipynb` |
 | EA FC light add-on (D12): download, 2017/18 matching, role-cluster check, optional baseline features | ⬜ to do, **not a dependency** |
 | Milestone 1 hand-in notebook, in the brief's five parts + roles (D15) | ✅ `notebooks/04_milestone1.ipynb` |
 | Milestone 1 written report | ⬜ to do |
@@ -88,7 +88,7 @@ end of week 9, shrink it and report that honestly.
 
 ### Already built, outside the milestones
 
-- **Club context** (`notebooks/02_club_context_features.ipynb`,
+- **Club context** (`notebooks/side_work/02_club_context_features.ipynb`,
   `src/features/club_context.py`): ClubElo team strength and destination
   manager tenure. No standalone gain on the 276 transfers. Kept for fit
   features and error analysis (D4), and reusable for every season.
@@ -422,7 +422,7 @@ for example "ball-winning midfielder" vs "deep playmaker".
    cross-validation.
 
 **Built (2026-11-04):** `src/features/player_roles.py` and
-`notebooks/03_player_roles.ipynb`; k and names in D14.
+`notebooks/side_work/03_player_roles.ipynb`; k and names in D14.
 - **Features (12):** `passes_p90`, `pass_acc`, `progressive_passes_p90`,
   `key_passes_p90`, `crosses_p90`, `shots_p90`, `dribbles_p90`,
   `duels_p90`, `interceptions_p90`, `avg_x`, `avg_width`,

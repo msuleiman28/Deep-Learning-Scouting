@@ -36,7 +36,7 @@ ROLE_FEATURES = [
 ]
 LOG_FEATURES = [f for f in ROLE_FEATURES if f.endswith("_p90")]
 
-# Chosen in notebooks/03_player_roles.ipynb (decision D14 in Plan.md). Shared here so every
+# Chosen in notebooks/side_work/03_player_roles.ipynb (decision D14 in Plan.md). Shared here so every
 # notebook assigns the same roles.
 K_BY_POSITION = {"DF": 4, "MD": 4, "FW": 3}
 ROLE_ANCHORS = {                               # role name -> anchor player's wy_id

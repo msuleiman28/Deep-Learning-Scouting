@@ -5,6 +5,11 @@ Run from anywhere inside the repo (Windows, macOS, or Linux):
     python src/data/download_data.py           # fetch whatever is missing
     python src/data/download_data.py --force   # re-download everything
 
+or from a notebook or Python code:
+
+    from src.data.download_data import download_all
+    download_all()                              # same as the first command; raises DownloadError on failure
+
 Uses only the Python standard library. Files that already exist are skipped,
 and downloads are written to a temporary ``.part`` file first so an interrupted
 run never leaves a truncated file that looks complete.
@@ -152,11 +157,18 @@ def fetch_league_zip(url: str, prefix: str, out_dir: Path, force: bool, failures
         zip_path.unlink(missing_ok=True)
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--force", action="store_true", help="re-download files that already exist")
-    args = parser.parse_args()
+class DownloadError(RuntimeError):
+    """Raised when some files could not be downloaded or failed their checksum."""
 
+
+def download_all(force: bool = False) -> Path:
+    """Download every source into data/raw/ and return that folder.
+
+    Files already present are skipped (Transfermarkt and ClubElo are re-checked against their
+    MD5), so this is cheap to call at the top of every notebook. Raises DownloadError listing the
+    failed or missing files; files that did download are kept, so calling it again retries only
+    what's missing.
+    """
     raw = find_repo_root() / "data" / "raw"
     wy_dir, tm_dir, elo_dir = raw / "wyscout", raw / "transfermarkt", raw / "clubelo"
     us_dir = raw / "understat"
@@ -166,21 +178,21 @@ def main() -> None:
 
     print(f"Wyscout -> {wy_dir}")
     for name, url in WYSCOUT_FILES.items():
-        fetch(url, wy_dir / name, args.force, failures)
+        fetch(url, wy_dir / name, force, failures)
     for url, prefix in WYSCOUT_ZIPS.items():
-        fetch_league_zip(url, prefix, wy_dir, args.force, failures)
+        fetch_league_zip(url, prefix, wy_dir, force, failures)
 
     print(f"Transfermarkt -> {tm_dir}")
     for t in TM_TABLES:
-        fetch(f"{TM_BASE}/{t}.csv.gz", tm_dir / f"{t}.csv.gz", args.force, failures, TM_MD5[t])
+        fetch(f"{TM_BASE}/{t}.csv.gz", tm_dir / f"{t}.csv.gz", force, failures, TM_MD5[t])
 
     print(f"ClubElo -> {elo_dir}")
-    fetch(ELO_URL, elo_dir / "EloRatings.csv", args.force, failures, ELO_MD5)
+    fetch(ELO_URL, elo_dir / "EloRatings.csv", force, failures, ELO_MD5)
 
     print(f"Understat -> {us_dir}")
     for name in UNDERSTAT_FILES:
         league = name.split("_", 1)[1].rsplit("_", 1)[0]  # players_la_liga_17-18.csv -> la_liga
-        fetch(f"{UNDERSTAT_BASE}/{league}/{name}", us_dir / name, args.force, failures)
+        fetch(f"{UNDERSTAT_BASE}/{league}/{name}", us_dir / name, force, failures)
 
     expected = ([wy_dir / n for n in WYSCOUT_FILES]
                 + [wy_dir / f"{p}_{lg}.json" for p in WYSCOUT_ZIPS.values() for lg in LEAGUES]
@@ -189,10 +201,23 @@ def main() -> None:
                 + [us_dir / n for n in UNDERSTAT_FILES])
     missing = [p.name for p in expected if not p.exists()]
     if failures or missing:
-        print("\nIncomplete. Failed:", ", ".join(failures) or "-", "| Missing:", ", ".join(missing) or "-")
-        print("Re-run the script to retry; files already downloaded are kept.")
-        sys.exit(1)
+        raise DownloadError(f"Incomplete. Failed: {', '.join(failures) or '-'} | "
+                            f"Missing: {', '.join(missing) or '-'}. "
+                            "Run again to retry; files already downloaded are kept. A file whose "
+                            "checksum fails is only replaced with force=True (--force).")
     print(f"\nDone: all {len(expected)} files are in {raw}")
+    return raw
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--force", action="store_true", help="re-download files that already exist")
+    args = parser.parse_args()
+    try:
+        download_all(force=args.force)
+    except DownloadError as exc:
+        print(f"\n{exc}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

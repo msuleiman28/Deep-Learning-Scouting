@@ -12,6 +12,8 @@ Steps (the same logic notebook 01 used to run inline):
    if missing) are matched to Transfermarkt (``src/data/player_matching.py``).
 2. Funnel: linked players' transfers dated WINDOW_START to WINDOW_END ->
    club-to-club moves -> no loan returns -> first move per player ->
+   not a loan pass-through (D16: back to the owning club and gone again within
+   PASS_THROUGH_DAYS; the player is dropped, not replaced by his next move) ->
    destination club with >= MIN_DEST_GAMES league games in the label window
    -> >= MIN_WY_MINUTES Wyscout minutes.
 3. Label y and prev_share_tm (``src/features/labels.py``), plus baseline
@@ -44,6 +46,7 @@ LABEL_DAYS = 365
 LEAGUE_ONLY = True            # D2: label and prev_share_tm count league games only
 MIN_DEST_GAMES = 10           # destination club needs >= 10 recorded league games in the label window
 MIN_WY_MINUTES = 450          # >= 5 full matches of Wyscout events, so per-90 stats aren't noise
+PASS_THROUGH_DAYS = 60        # D16: back to the owning club and gone again within this many days
 SEED, TEST_SIZE = 42, 0.2
 BAD_DEST = r"retired|without club|unknown|career break"
 SPLIT_KEY = ["player_id", "wy_id", "transfer_date", "to_club_id"]
@@ -83,14 +86,15 @@ def load_inputs() -> dict:
     return {
         "tm": tm, "wy": wy, "link": link,
         "pt": PlayingTime(tm["games"], tm["appearances"], link.player_id, LEAGUE_ONLY),
-        "tr": flag_loan_returns(tm["transfers"]),
+        "tr": flag_loan_returns(tm["transfers"], pass_through_days=PASS_THROUGH_DAYS),
         "vals": tm["player_valuations"].dropna(subset=["date", "market_value_in_eur"]).sort_values("date"),
     }
 
 
 def build_dataset(inp: dict, window_start: str = WINDOW_START, window_end: str = WINDOW_END,
                   min_dest_games: int = MIN_DEST_GAMES, min_wy_minutes: int = MIN_WY_MINUTES,
-                  drop_loan_returns: bool = True) -> tuple[pd.DataFrame, dict[str, int]]:
+                  drop_loan_returns: bool = True,
+                  drop_pass_through: bool = True) -> tuple[pd.DataFrame, dict[str, int]]:
     """Eligible transfers with label and baseline features, plus the funnel {step: count}."""
     wy, link, pt, tr = inp["wy"], inp["link"][["wy_id", "player_id"]], inp["pt"], inp["tr"]
     players = inp["tm"]["players"].set_index("player_id")
@@ -110,6 +114,11 @@ def build_dataset(inp: dict, window_start: str = WINDOW_START, window_end: str =
         f["  excluding loan returns"] = len(t)
     t = t.sort_values("transfer_date").drop_duplicates("player_id").reset_index(drop=True)
     f["  first move per player"] = len(t)
+    if drop_pass_through:
+        # After choosing the first move, so the player drops out rather than his next move taking its
+        # place: that move's selling club would be the pass-through club, where he didn't play.
+        t = t[~t.pass_through].reset_index(drop=True)
+        f[f"  not a loan pass-through (left again within {PASS_THROUGH_DAYS} days)"] = len(t)
     lab = [pt.share(r.player_id, r.to_club_id, r.transfer_date, r.transfer_date + pd.Timedelta(days=LABEL_DAYS))
            for r in t.itertuples()]
     t["y"] = [x[0] for x in lab]

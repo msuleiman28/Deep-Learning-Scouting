@@ -38,7 +38,7 @@ milestones.
 | Player features table for clustering (§5, step 3): per-90 stats + location features, 2,561 players | ✅ `data/processed/player_features.csv` |
 | **Player-role clustering** (§5, D14): 12 roles, 1,947 players | ✅ `data/processed/player_roles.csv`, `notebooks/side_work/03_player_roles.ipynb` |
 | EA FC light add-on (D12): download, 2017/18 matching, role-cluster check, optional baseline features | ⬜ to do, **not a dependency** |
-| Milestone 1 hand-in notebook, in the brief's five parts + roles (D15) | ✅ `notebooks/04_milestone1.ipynb` |
+| Milestone 1 hand-in notebook, in the brief's five parts + roles (D15) | ✅ `handin/milestone1/` (notebook + data); team text still to write |
 | Milestone 1 written report | ⬜ to do |
 
 N = 276 is under the 300 threshold in our proposal, so milestone 1 follows the
@@ -232,9 +232,18 @@ come from **player–team fit** and from **more data**.
   outside the big 5 are still open (D13).
 - **D15. Milestone 1 hand-in** (2026-11-05), following the professor's worked
   example:
-  - **Notebook:** `notebooks/04_milestone1.ipynb`, standalone. It downloads
-    data and builds missing tables with `src/`; notebooks 01–03 stay as the
-    working behind it.
+  - **Hand-in = one folder you can zip and send:** `handin/milestone1/`,
+    with `milestone1.ipynb` and `data/` (4 small CSV files, ~700 KB).
+    - The notebook imports nothing from `src/` and downloads nothing. It
+      needs only numpy, pandas, matplotlib and scikit-learn.
+    - `python -m src.pipelines.export_milestone1` prepares `data/`: it runs
+      the pipeline and writes the files. They're git-ignored, so re-run it
+      after any data change.
+    - The k choice for the roles (silhouette + bootstrap stability) is inside
+      the notebook. Its roles were checked identical, player by player, to
+      `src/features/player_roles.py`.
+    - Notebooks 01–03 stay in `notebooks/side_work/` as the working behind
+      it; the professor doesn't need them.
   - **Kept simple (2026-11-05):** the baselines and models are written inline
     with plain pandas and scikit-learn (`src/models/` was removed). Each
     section has a "notes for the write-up" cell for the team to replace with

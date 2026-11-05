@@ -88,10 +88,17 @@ multi-season dataset removes that limit for later milestones.
 - `03_player_roles.ipynb`: player-role clustering (12 roles within positions);
   needs `python -m src.pipelines.build_player_features` first.
 
-- `04_milestone1.ipynb`: **the milestone 1 hand-in.** It covers the data, the
-  split, the model, the error with baselines, the optimisation checks, and the
-  player roles. It runs on its own from a fresh clone, downloading and building
-  anything missing. Needs `matplotlib`.
+## Milestone 1 hand-in
+
+`handin/milestone1/` is what we send: `milestone1.ipynb` plus a small `data/`
+folder. Prepare the data, then zip the folder:
+
+```bash
+python -m src.pipelines.export_milestone1   # writes handin/milestone1/data/ (~700 KB)
+```
+
+The notebook reads only those files. It needs numpy, pandas, matplotlib and
+scikit-learn, and none of the project code.
 
 ## Building feature tables
 

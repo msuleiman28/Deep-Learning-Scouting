@@ -93,7 +93,14 @@ From the repository root, after downloading the data:
 
 ```bash
 python -m src.pipelines.build_player_features   # data/processed/player_features.csv (~1 min)
+python -m src.pipelines.build_transfers         # transfers_joined.csv + wyscout_tm_link.csv (~30 s)
 ```
+
+`build_transfers` matches Wyscout players to Transfermarkt, applies the
+transfer funnel and computes the league-only playing-time label: the same
+logic as notebook 01, now reusable. It never overwrites the committed
+`split.csv` unless you pass `--write-split`, which is only for when a decision
+changes the rows (see [Plan.md](Plan.md) §4).
 
 One row per Wyscout player with 2017/18 league minutes: minutes, per-90 event
 stats and location features (average position, width, final-third share,

@@ -141,7 +141,8 @@ Spain) into `data/raw/wyscout/`, and the six Transfermarkt tables into
 
   ```python
   from src.data.download_data import download_all
-  download_all()   # raises DownloadError listing any failed files
+  download_all()             # raises DownloadError listing any failed files
+  download_all(quiet=True)   # same, but hides the "already present" lines
   ```
 - Files already downloaded are skipped, so re-run it to retry any failures.
 - Use `--force` to re-download everything.

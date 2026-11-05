@@ -47,7 +47,7 @@ def market_value_after(data: pd.DataFrame, days: int = 365) -> pd.DataFrame:
 
 
 def main() -> None:
-    download_all()
+    download_all(quiet=True)
     if not all((bt.OUT / f).exists() for f in ["transfers_joined.csv", "transfer_funnel.csv"]):
         bt.main()
     data = pd.read_csv(bt.OUT / "transfers_joined.csv", parse_dates=["transfer_date"])

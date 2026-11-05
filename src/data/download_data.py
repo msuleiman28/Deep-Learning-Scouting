@@ -9,6 +9,7 @@ or from a notebook or Python code:
 
     from src.data.download_data import download_all
     download_all()                              # same as the first command; raises DownloadError on failure
+    download_all(quiet=True)                    # only print downloads, failures and the final line
 
 Uses only the Python standard library. Files that already exist are skipped,
 and downloads are written to a temporary ``.part`` file first so an interrupted
@@ -117,13 +118,14 @@ def download(url: str, dest: Path, md5: str | None = None) -> None:
     tmp.replace(dest)
 
 
-def fetch(url: str, dest: Path, force: bool, failures: list[str], md5: str | None = None) -> None:
+def fetch(url: str, dest: Path, force: bool, failures: list[str], md5: str | None = None,
+          quiet: bool = False) -> None:
     if dest.exists() and not force:
         if md5 and file_md5(dest) != md5:
             print(f"  FAILED {dest.name}: your copy differs from the pinned snapshot; "
                   "re-run with --force to replace it")
             failures.append(dest.name)
-        else:
+        elif not quiet:
             print(f"  {dest.name}: already present" + (", checksum OK" if md5 else "") + ", skipping")
         return
     try:
@@ -133,11 +135,13 @@ def fetch(url: str, dest: Path, force: bool, failures: list[str], md5: str | Non
         failures.append(dest.name)
 
 
-def fetch_league_zip(url: str, prefix: str, out_dir: Path, force: bool, failures: list[str]) -> None:
+def fetch_league_zip(url: str, prefix: str, out_dir: Path, force: bool, failures: list[str],
+                     quiet: bool = False) -> None:
     """Download a Wyscout zip and extract only the five league files."""
     wanted = [f"{prefix}_{lg}.json" for lg in LEAGUES]
     if all((out_dir / w).exists() for w in wanted) and not force:
-        print(f"  {prefix}_*.json: already present, skipping")
+        if not quiet:
+            print(f"  {prefix}_*.json: already present, skipping")
         return
     zip_path = out_dir / f"{prefix}.zip"
     try:
@@ -161,13 +165,16 @@ class DownloadError(RuntimeError):
     """Raised when some files could not be downloaded or failed their checksum."""
 
 
-def download_all(force: bool = False) -> Path:
+def download_all(force: bool = False, quiet: bool = False) -> Path:
     """Download every source into data/raw/ and return that folder.
 
     Files already present are skipped (Transfermarkt and ClubElo are re-checked against their
     MD5), so this is cheap to call at the top of every notebook. Raises DownloadError listing the
     failed or missing files; files that did download are kept, so calling it again retries only
     what's missing.
+
+    quiet=True hides the section headers and the "already present" lines, so when everything is
+    there it prints a single line. Downloads, failures and the final line are always printed.
     """
     raw = find_repo_root() / "data" / "raw"
     wy_dir, tm_dir, elo_dir = raw / "wyscout", raw / "transfermarkt", raw / "clubelo"
@@ -176,23 +183,27 @@ def download_all(force: bool = False) -> Path:
         d.mkdir(parents=True, exist_ok=True)
     failures: list[str] = []
 
-    print(f"Wyscout -> {wy_dir}")
+    def header(text: str) -> None:
+        if not quiet:
+            print(text)
+
+    header(f"Wyscout -> {wy_dir}")
     for name, url in WYSCOUT_FILES.items():
-        fetch(url, wy_dir / name, force, failures)
+        fetch(url, wy_dir / name, force, failures, quiet=quiet)
     for url, prefix in WYSCOUT_ZIPS.items():
-        fetch_league_zip(url, prefix, wy_dir, force, failures)
+        fetch_league_zip(url, prefix, wy_dir, force, failures, quiet=quiet)
 
-    print(f"Transfermarkt -> {tm_dir}")
+    header(f"Transfermarkt -> {tm_dir}")
     for t in TM_TABLES:
-        fetch(f"{TM_BASE}/{t}.csv.gz", tm_dir / f"{t}.csv.gz", force, failures, TM_MD5[t])
+        fetch(f"{TM_BASE}/{t}.csv.gz", tm_dir / f"{t}.csv.gz", force, failures, TM_MD5[t], quiet=quiet)
 
-    print(f"ClubElo -> {elo_dir}")
-    fetch(ELO_URL, elo_dir / "EloRatings.csv", force, failures, ELO_MD5)
+    header(f"ClubElo -> {elo_dir}")
+    fetch(ELO_URL, elo_dir / "EloRatings.csv", force, failures, ELO_MD5, quiet=quiet)
 
-    print(f"Understat -> {us_dir}")
+    header(f"Understat -> {us_dir}")
     for name in UNDERSTAT_FILES:
         league = name.split("_", 1)[1].rsplit("_", 1)[0]  # players_la_liga_17-18.csv -> la_liga
-        fetch(f"{UNDERSTAT_BASE}/{league}/{name}", us_dir / name, force, failures)
+        fetch(f"{UNDERSTAT_BASE}/{league}/{name}", us_dir / name, force, failures, quiet=quiet)
 
     expected = ([wy_dir / n for n in WYSCOUT_FILES]
                 + [wy_dir / f"{p}_{lg}.json" for p in WYSCOUT_ZIPS.values() for lg in LEAGUES]
@@ -205,7 +216,7 @@ def download_all(force: bool = False) -> Path:
                             f"Missing: {', '.join(missing) or '-'}. "
                             "Run again to retry; files already downloaded are kept. A file whose "
                             "checksum fails is only replaced with force=True (--force).")
-    print(f"\nDone: all {len(expected)} files are in {raw}")
+    print(("" if quiet else "\n") + f"Done: all {len(expected)} files are in {raw}")
     return raw
 
 

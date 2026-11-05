@@ -2,7 +2,8 @@
 
 Run from the repository root:
 
-    python -m src.pipelines.build_transfers                # writes transfers_joined.csv, wyscout_tm_link.csv
+    python -m src.pipelines.build_transfers                # writes transfers_joined.csv, wyscout_tm_link.csv,
+                                                           # transfer_funnel.csv
     python -m src.pipelines.build_transfers --write-split  # also (re)writes split.csv: only after a decision
                                                            # changes the rows (Plan.md section 4)
 
@@ -152,9 +153,10 @@ def main(out_dir: Path = OUT, write_split: bool = False) -> pd.DataFrame:
     out_dir.mkdir(parents=True, exist_ok=True)
     data.to_csv(out_dir / "transfers_joined.csv", index=False)
     inp["link"].to_csv(out_dir / "wyscout_tm_link.csv", index=False)
+    pd.DataFrame(list(funnel.items()), columns=["step", "n"]).to_csv(out_dir / "transfer_funnel.csv", index=False)
     if write_split:
         make_split(data).to_csv(out_dir / "split.csv", index=False)
-    print(f"Saved transfers_joined.csv and wyscout_tm_link.csv" + (" and split.csv" if write_split else "")
+    print(f"Saved transfers_joined.csv, wyscout_tm_link.csv, transfer_funnel.csv" + (", split.csv" if write_split else "")
           + f" to {out_dir}")
     return data
 

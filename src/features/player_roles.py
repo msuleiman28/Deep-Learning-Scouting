@@ -36,6 +36,23 @@ ROLE_FEATURES = [
 ]
 LOG_FEATURES = [f for f in ROLE_FEATURES if f.endswith("_p90")]
 
+# Chosen in notebooks/03_player_roles.ipynb (decision D14 in Plan.md). Shared here so every
+# notebook assigns the same roles.
+K_BY_POSITION = {"DF": 4, "MD": 4, "FW": 3}
+ROLE_ANCHORS = {                               # role name -> anchor player's wy_id
+    "DF": {"Attacking full-back": 7885,        # R. Bertrand
+           "Defensive centre-back": 8653,      # H. Maguire
+           "Ball-playing centre-back": 20459,  # L. Bonucci
+           "Defensive full-back": 8313},       # P. Zabaleta
+    "MD": {"Ball-winning midfielder": 4488,    # Saúl
+           "Wide midfielder": 14812,           # I. Perišić
+           "Deep-lying midfielder": 3346,      # Sergio Busquets
+           "Attacking midfielder": 38021},     # K. De Bruyne
+    "FW": {"Creative forward": 3359,           # L. Messi
+           "Wide support forward": 5400,       # Gerard Moreno
+           "Central striker": 8717},           # H. Kane
+}
+
 
 def eligible_players(pf: pd.DataFrame, min_minutes: int = MIN_MINUTES) -> pd.DataFrame:
     """Players with enough minutes and a known role."""

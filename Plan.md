@@ -38,7 +38,8 @@ milestones.
 | Player features table for clustering (§5, step 3): per-90 stats + location features, 2,561 players | ✅ `data/processed/player_features.csv` |
 | **Player-role clustering** (§5, D14): 12 roles, 1,947 players | ✅ `data/processed/player_roles.csv`, `notebooks/03_player_roles.ipynb` |
 | EA FC light add-on (D12): download, 2017/18 matching, role-cluster check, optional baseline features | ⬜ to do, **not a dependency** |
-| Milestone 1 write-up: match rate, funnel, baselines, roles | ⬜ to do |
+| Milestone 1 hand-in notebook, in the brief's five parts + roles (D15) | ✅ `notebooks/04_milestone1.ipynb` |
+| Milestone 1 written report | ⬜ to do |
 
 N = 276 is under the 300 threshold in our proposal, so milestone 1 follows the
 proposal's mitigation: **small models, few features**. After milestone 1 the
@@ -229,6 +230,32 @@ come from **player–team fit** and from **more data**.
   and mental attributes for every position, across feature seasons
   2015/16 – 2022/23. §6 item 6 describes how it's used; selling clubs
   outside the big 5 are still open (D13).
+- **D15. Milestone 1 hand-in** (2026-11-05), following the professor's worked
+  example:
+  - **Notebook:** `notebooks/04_milestone1.ipynb`, standalone. It downloads
+    data and builds missing tables with `src/`; notebooks 01–03 stay as the
+    working behind it.
+  - **Split on the player:** one transfer each, so 0 players on both sides.
+    Destination-club overlap (32 of 111 clubs; 80% of test transfers) is
+    reported as a caveat; the shared split is unchanged.
+  - **Metric:** MSE, with the reason stated. An "overestimated by ≥ 0.25"
+    count reflects that overestimating playing time is the costly mistake.
+  - **Baselines in one table:**
+
+    | Baseline | Cross-validation MSE |
+    |---|---|
+    | Always predict the average (best) | 0.0815 |
+    | Average for his role | 0.0849 |
+    | Linear regression | 0.0865 |
+    | "Plays as much as last year" (`prev_share_tm`) | 0.146 |
+  - **Leakage demo:** using the market value one year after the transfer
+    "improves" test MSE to 0.070, showing why every feature must be dated
+    before the transfer.
+  - **Optimisation checks:**
+    - 20-row check: 91% fit. Only 19 independent parameters (verified rank),
+      so an exact fit isn't possible; a 15-row check fits exactly.
+    - SGD training curve: validation MSE is lowest after ~7 passes and never
+      below the average (overfitting).
 - **D14. Player roles: k and names** (2026-11-04):
   - **k per position:** defenders 4, midfielders 4, forwards 3. Each is the
     largest k that stays stable when the data is resampled (adjusted Rand

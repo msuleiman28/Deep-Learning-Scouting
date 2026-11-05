@@ -86,6 +86,10 @@ multi-season dataset removes that limit for later milestones.
   manager features.
 - `03_player_roles.ipynb`: player-role clustering (12 roles within positions);
   needs `python -m src.pipelines.build_player_features` first.
+- `04_milestone1.ipynb`: **the milestone 1 hand-in.** It covers the data, the
+  split, the model, the error with baselines, the optimisation checks, and the
+  player roles. It runs on its own from a fresh clone, downloading and building
+  anything missing. Needs `matplotlib`.
 
 ## Building feature tables
 

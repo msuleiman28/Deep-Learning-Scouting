@@ -77,7 +77,7 @@ playing_time_share = minutes_played_by_player_in_first_12_months
                       / available_team_minutes_in_first_12_months
 ```
 
-Implemented in `notebooks/01_join_and_baselines.ipynb` (`time_share`):
+Implemented in `notebooks/side_work/01_join_and_baselines.ipynb` (`time_share`):
 the player's league minutes for the new club ÷ (90 × the club's league matches
 recorded by Transfermarkt in [transfer date, transfer date + 365 days)),
 capped at 1. Only league matches count (Transfermarkt

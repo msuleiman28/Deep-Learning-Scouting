@@ -46,7 +46,6 @@ structure.
 ├── src/
 │   ├── data/         # Loading, cleaning, and cross-dataset matching
 │   ├── features/     # Player, team, role, style, and weakness features
-│   ├── models/       # Baselines and neural fit model
 │   ├── pipelines/    # End-to-end training and scoring workflows
 │   └── visualization/ # Clusters, diagnostics, and scouting outputs
 └── AGENTS.md
@@ -59,10 +58,10 @@ The full plan, status, open decisions, and evaluation rules are in
 
 1. ✅ Wyscout ↔ Transfermarkt player matching: 98.5% of players matched.
 2. ✅ Post-transfer 12-month playing-time label (league games only):
-   **276** eligible transfers.
+   **267** eligible transfers.
 3. ✅ Constant-mean and linear-regression baselines on a fixed split
    (`data/processed/split.csv`). The constant mean is currently the bar to beat
-   (cross-validation MSE 0.0815; test MSE 0.0973).
+   (cross-validation MSE 0.0756; test MSE 0.0943).
 4. ✅ Player-role clustering: 12 roles within positions. Optional: an EA FC
    check of the clusters and optional EA FC baseline features. Milestone 1
    doesn't depend on EA FC.
@@ -80,12 +79,26 @@ multi-season dataset removes that limit for later milestones.
 
 ## Notebooks
 
+`notebooks/side_work/` holds the working behind milestone 1:
+
 - `01_join_and_baselines.ipynb`: player matching, label, transfer funnel,
   baselines.
 - `02_club_context_features.ipynb`: ClubElo team strength and destination
   manager features.
 - `03_player_roles.ipynb`: player-role clustering (12 roles within positions);
   needs `python -m src.pipelines.build_player_features` first.
+
+## Milestone 1 hand-in
+
+`handin/milestone1/` is what we send: `milestone1.ipynb` plus a small `data/`
+folder. Prepare the data, then zip the folder:
+
+```bash
+python -m src.pipelines.export_milestone1   # writes handin/milestone1/data/ (~700 KB)
+```
+
+The notebook reads only those files. It needs numpy, pandas, matplotlib and
+scikit-learn, and none of the project code.
 
 ## Building feature tables
 
@@ -128,7 +141,8 @@ Spain) into `data/raw/wyscout/`, and the six Transfermarkt tables into
 
   ```python
   from src.data.download_data import download_all
-  download_all()   # raises DownloadError listing any failed files
+  download_all()             # raises DownloadError listing any failed files
+  download_all(quiet=True)   # same, but hides the "already present" lines
   ```
 - Files already downloaded are skipped, so re-run it to retry any failures.
 - Use `--force` to re-download everything.

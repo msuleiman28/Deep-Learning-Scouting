@@ -47,11 +47,23 @@ class PlayingTime:
         return min(mins[(dates >= s) & (dates < e)].sum() / (90 * n), 1.0), n
 
 
-def flag_loan_returns(transfers: pd.DataFrame, max_days: int = 400) -> pd.DataFrame:
-    """Transfers sorted by player and date, with ``loan_return``: the player goes back to the club he
-    left in his previous move within ``max_days`` (~13 months). Rows without a date are dropped."""
+def flag_loan_returns(transfers: pd.DataFrame, max_days: int = 400,
+                      pass_through_days: int = 60) -> pd.DataFrame:
+    """Transfers sorted by player and date (rows without a date dropped), with two flags:
+
+    - ``loan_return``: the player goes back to the club he left in his previous move within
+      ``max_days`` (~13 months), i.e. a short loan ending.
+    - ``pass_through`` (decision D16): he goes back to the club he left in his previous move, after
+      any gap, and leaves that club again within ``pass_through_days``. Mostly a long loan ending
+      followed by another loan or a sale, so not a real signing: he plays 0 for that club.
+      Genuine returns, where he stays, are not flagged. This uses the few weeks after the transfer
+      to decide which transfers count as signings; it is never a model feature.
+    """
     tr = transfers.dropna(subset=["transfer_date"]).sort_values(["player_id", "transfer_date"]).copy()
     g = tr.groupby("player_id")
-    tr["loan_return"] = ((tr.to_club_id == g.from_club_id.shift())
-                         & ((tr.transfer_date - g.transfer_date.shift()).dt.days < max_days))
+    back = tr.to_club_id == g.from_club_id.shift()
+    tr["loan_return"] = back & ((tr.transfer_date - g.transfer_date.shift()).dt.days < max_days)
+    left_again = ((g.from_club_id.shift(-1) == tr.to_club_id)
+                  & ((g.transfer_date.shift(-1) - tr.transfer_date).dt.days <= pass_through_days))
+    tr["pass_through"] = back & left_again
     return tr

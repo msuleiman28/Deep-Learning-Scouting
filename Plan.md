@@ -31,16 +31,17 @@ milestones.
 |---|---|
 | Reproducible, pinned data download (`src/data/download_data.py`) | ✅ done |
 | Player matching Wyscout ↔ Transfermarkt | ✅ 98.5% matched (2,523 / 2,561) |
-| 12-month playing-time label (league games only, D2) + transfer funnel | ✅ N = 276 eligible transfers |
+| 12-month playing-time label (league games only, D2) + transfer funnel, loan pass-throughs removed (D16) | ✅ N = 267 eligible transfers |
 | Matching, label and funnel moved into `src/` (`python -m src.pipelines.build_transfers`), reproducing notebook 01 exactly | ✅ |
-| Fixed train/test split (`data/processed/split.csv`) | ✅ 220 train / 56 test (regenerated for D2) |
-| Constant-mean and linear-regression baselines | ✅ cross-validation MSE 0.0815 / 0.0865; test MSE 0.0973 / 0.1012 |
+| Fixed train/test split (`data/processed/split.csv`) | ✅ 213 train / 54 test (regenerated for D16) |
+| Constant-mean and linear-regression baselines | ✅ cross-validation MSE 0.0756 / 0.0799; test MSE 0.0943 / 0.1041 |
 | Player features table for clustering (§5, step 3): per-90 stats + location features, 2,561 players | ✅ `data/processed/player_features.csv` |
-| **Player-role clustering** (§5, D14): 12 roles, 1,947 players | ✅ `data/processed/player_roles.csv`, `notebooks/03_player_roles.ipynb` |
+| **Player-role clustering** (§5, D14): 12 roles, 1,947 players | ✅ `data/processed/player_roles.csv`, `notebooks/side_work/03_player_roles.ipynb` |
 | EA FC light add-on (D12): download, 2017/18 matching, role-cluster check, optional baseline features | ⬜ to do, **not a dependency** |
-| Milestone 1 write-up: match rate, funnel, baselines, roles | ⬜ to do |
+| Milestone 1 hand-in notebook, in the brief's five parts + roles (D15) | ✅ `handin/milestone1/` (notebook + data); team text still to write |
+| Milestone 1 written report | ⬜ to do |
 
-N = 276 is under the 300 threshold in our proposal, so milestone 1 follows the
+N = 267 is under the 300 threshold in our proposal, so milestone 1 follows the
 proposal's mitigation: **small models, few features**. After milestone 1 the
 multi-season dataset removes that limit (D7, D11).
 
@@ -87,13 +88,14 @@ end of week 9, shrink it and report that honestly.
 
 ### Already built, outside the milestones
 
-- **Club context** (`notebooks/02_club_context_features.ipynb`,
+- **Club context** (`notebooks/side_work/02_club_context_features.ipynb`,
   `src/features/club_context.py`): ClubElo team strength and destination
-  manager tenure. No standalone gain on the 276 transfers. Kept for fit
-  features and error analysis (D4), and reusable for every season.
+  manager tenure. No standalone gain on the 276 transfers (checked before
+  D16). Kept for fit features and error analysis (D4), and reusable for every
+  season.
 
 **Result to keep in mind:** neither the linear regression nor the club context
-beats the constant mean on the 276 transfers. Player-only and club-only
+beats the constant mean on the milestone 1 transfers. Player-only and club-only
 information does not predict playing time there, so the project's value has to
 come from **player–team fit** and from **more data**.
 
@@ -142,8 +144,8 @@ come from **player–team fit** and from **more data**.
 
 - **D1. Milestone 1 data** (2026-10-21): keep the current window (transfers
   15 May 2018 – 15 Feb 2019, ≥ 450 Wyscout minutes) with a small model.
-  N = 278, then 276 after the league-only label (D2). More data comes from
-  D7, not from relaxing filters.
+  N = 278, then 276 after the league-only label (D2), then 267 after removing
+  loan pass-throughs (D16). More data comes from D7, not from relaxing filters.
 - **D4. Elo** (2026-10-21): keep the code and columns. Use them inside fit
   features (e.g. player level vs destination level) or for error analysis.
   Don't add them to the model on their own: no gain in cross-validation on
@@ -155,7 +157,7 @@ come from **player–team fit** and from **more data**.
 - **D6. Milestone 1 clustering = player roles** (2026-10-21), not team styles.
   - ~1,900 players with ≥ 450 minutes vs only 98 teams, so the clusters are
     more stable.
-  - Every one of the 276 transfers has a Wyscout player, so coverage is 100%.
+  - Every milestone 1 transfer has a Wyscout player, so coverage is 100%.
   - Per-90 stats already exist.
   - Team weakness features will be expressed in roles, so roles are needed
     first anyway.
@@ -229,6 +231,73 @@ come from **player–team fit** and from **more data**.
   and mental attributes for every position, across feature seasons
   2015/16 – 2022/23. §6 item 6 describes how it's used; selling clubs
   outside the big 5 are still open (D13).
+- **D16. Remove loan pass-throughs** (2026-11-05):
+  - **The problem:** `flag_loan_returns` only caught a return to the club the
+    player left in his previous move if it was within 400 days. Two-year
+    loans ending slipped through: 13 of the 276 transfers, mostly dated 30
+    June, and 69% of them had y = 0 (vs 2% for the rest). They made up most
+    of the zero labels.
+  - **The rule:** a transfer is a *pass-through* if the player returns to the
+    club he left in his previous move (at any gap) **and leaves it again
+    within 60 days** (`PASS_THROUGH_DAYS` in
+    `src/pipelines/build_transfers.py`). Pass-throughs are dropped; genuine
+    returns, where he stays, are kept (e.g. Spinazzola at Juventus).
+  - **Where in the funnel:** after "first move per player", so the player
+    drops out rather than his next move taking its place. That move's
+    selling club would be the pass-through club, where he didn't play, so
+    `prev_share_tm` would wrongly be 0.
+  - **Effect:**
+    - 13 removed at that step (464 → 451); 9 of them would have reached the
+      final dataset, all with y = 0: Asano, Meret, Venuti, Sportiello,
+      Caldara, Saponara, Wolf, Cristante, Mascarell.
+    - N 276 → **267**; y = 0 falls from 5.4% to 2.2%; mean y 0.489 → 0.506.
+    - `split.csv` regenerated (213 / 54), and the baselines re-run (D15).
+      Nothing beats the average still holds.
+  - **Caveat:** the rule looks up to 60 days past the transfer date. It
+    decides which transfers count as signings, and is never a model feature.
+- **D15. Milestone 1 hand-in** (2026-11-05), following the professor's worked
+  example:
+  - **Hand-in = one folder you can zip and send:** `handin/milestone1/`,
+    with `milestone1.ipynb` and `data/` (4 small CSV files, ~700 KB).
+    - The notebook imports nothing from `src/` and downloads nothing. It
+      needs only numpy, pandas, matplotlib and scikit-learn.
+    - `python -m src.pipelines.export_milestone1` prepares `data/`: it runs
+      the pipeline and writes the files. They're git-ignored, so re-run it
+      after any data change.
+    - The k choice for the roles (silhouette + bootstrap stability) is inside
+      the notebook. Its roles were checked identical, player by player, to
+      `src/features/player_roles.py`.
+    - Notebooks 01–03 stay in `notebooks/side_work/` as the working behind
+      it; the professor doesn't need them.
+  - **Kept simple (2026-11-05):** the baselines and models are written inline
+    with plain pandas and scikit-learn (`src/models/` was removed). Each
+    section has a "notes for the write-up" cell for the team to replace with
+    their own text.
+  - **Split on the player:** one transfer each, so 0 players on both sides.
+    Destination-club overlap (32 of 111 clubs; 80% of test transfers) is
+    reported as a caveat; the shared split is unchanged.
+  - **Metric:** MSE, with the reason stated. An "overestimated by ≥ 0.25"
+    count reflects that overestimating playing time is the costly mistake.
+  - **Baselines in one table:**
+
+    Numbers after D16 (267 transfers):
+
+    | Baseline | Cross-validation MSE | Test MSE |
+    |---|---|---|
+    | Always predict the average (best) | 0.0756 ± 0.0096 | 0.0943 |
+    | Average for his role | – | 0.0960 |
+    | Linear regression | 0.0799 ± 0.0118 | 0.1041 |
+    | "Plays as much as last year" (`prev_share_tm`) | – | 0.1446 |
+  - **Leakage demo:** using the market value one year after the transfer
+    "improves" test MSE to 0.081 (vs 0.094 for the average), showing why every
+    feature must be dated before the transfer.
+  - **Optimisation checks:**
+    - 20-row check: about 90% fit (MSE 0.008 vs a variance of 0.083). Only
+      19 independent parameters (verified rank), so an exact fit isn't
+      possible.
+    - SGD training curve: training MSE falls 0.183 → 0.058; validation MSE
+      falls 0.214 → 0.080 but only reaches the average's level (0.079),
+      never below it.
 - **D14. Player roles: k and names** (2026-11-04):
   - **k per position:** defenders 4, midfielders 4, forwards 3. Each is the
     largest k that stays stable when the data is resampled (adjusted Rand
@@ -269,7 +338,7 @@ come from **player–team fit** and from **more data**.
   makes the test score less trustworthy.
 - Metric: MSE, with RMSE also reported. The bar is the best baseline on the
   same split. On the milestone 1 split that's the constant mean
-  (cross-validation MSE 0.0815 ± 0.0087; test MSE 0.0973). Quote the spread of the
+  (cross-validation MSE 0.0756 ± 0.0096; test MSE 0.0943). Quote the spread of the
   cross-validation or validation scores with every comparison: differences
   smaller than that are noise.
 
@@ -293,7 +362,7 @@ come from **player–team fit** and from **more data**.
 
 ### Model size
 
-- **Milestone 1 (N = 276):** small models, at most about 20 model inputs,
+- **Milestone 1 (N = 267):** small models, at most about 20 model inputs,
   regularisation, several random seeds.
 - **Later milestones (N ≈ 1,950 with Understat; ≈ 2,800 – 5,800 with EA FC,
   see D11):** larger networks are allowed. Their size is justified by
@@ -330,7 +399,7 @@ come from **player–team fit** and from **more data**.
 for example "ball-winning midfielder" vs "deep playmaker".
 
 1. **Players:** everyone with ≥ 450 Wyscout minutes in 2017/18 (the same
-   threshold as the transfer dataset), not only the 276 who transferred, so
+   threshold as the transfer dataset), not only the players who transferred, so
    the roles describe the whole league population.
 2. **Positions:** cluster defenders, midfielders and forwards separately
    (Wyscout `role`). Goalkeepers are one role; their event stats don't
@@ -387,11 +456,11 @@ for example "ball-winning midfielder" vs "deep playmaker".
    broad position, role cluster, role probabilities (if a Gaussian mixture is
    used) and distance to the cluster centre.
 7. **Link to the label (descriptive only):** mean playing-time share by role
-   for the 276 transfers. Whether roles help the model is decided later, by
+   for the transfers. Whether roles help the model is decided later, by
    cross-validation.
 
 **Built (2026-11-04):** `src/features/player_roles.py` and
-`notebooks/03_player_roles.ipynb`; k and names in D14.
+`notebooks/side_work/03_player_roles.ipynb`; k and names in D14.
 - **Features (12):** `passes_p90`, `pass_acc`, `progressive_passes_p90`,
   `key_passes_p90`, `crosses_p90`, `shots_p90`, `dribbles_p90`,
   `duels_p90`, `interceptions_p90`, `avg_x`, `avg_width`,
@@ -408,7 +477,8 @@ for example "ball-winning midfielder" vs "deep playmaker".
   - Modrić and De Bruyne are attacking midfielders
   - Messi, Neymar and Griezmann are creative forwards
   - Kane and Lewandowski are central strikers
-- **Roles of the 276 transfers (descriptive, noisy):** all have a role.
+- **Roles of the 276 transfers (descriptive, noisy; computed before D16):**
+  all have a role.
   - Highest mean y: central strikers 0.56, goalkeepers 0.56, deep-lying
     midfielders 0.55.
   - Lowest: attacking midfielders 0.37, wide support forwards 0.40.
@@ -438,8 +508,8 @@ are pre-transfer.
      2015/16 – 2022/23 for EA FC (D11).
    - Window per season: 15 May after the season – 15 Feb the following year.
    - Same filters as milestone 1: club-to-club moves, no loan returns, first
-     move per player, destination club with ≥ 10 recorded league games, and the
-     league-only label (D2).
+     move per player, no loan pass-throughs (D16), destination club with ≥ 10
+     recorded league games, and the league-only label (D2).
    - Add `feature_season` and `covid_label` columns.
    - Move the logic into `src/` so both datasets share it. **Done for
      milestone 1 (2026-11-05):** `src/data/player_matching.py`,
@@ -560,7 +630,7 @@ simple join. All tables live in `data/processed/` unless noted.
 
 **Coverage risk for Wyscout team features:** the rich team style only exists
 for clubs in the 2017/18 Wyscout leagues. Before building it, count how many
-of the 276 destination clubs have Wyscout data, then either drop the
+of the milestone 1 destination clubs have Wyscout data, then either drop the
 uncovered transfers or fill in the league average with a "missing" flag.
 Record the choice under Decisions.
 
@@ -587,7 +657,7 @@ Start simple and add only what validation supports:
 
 Each version is accepted only if it beats the previous one in validation by
 more than the spread of the validation scores. The milestone 1 version
-(Wyscout, N = 276) stays small, per §4.
+(Wyscout, N = 267) stays small, per §4.
 
 ## 9. Known limitations (keep updated for the poster)
 
@@ -595,7 +665,7 @@ more than the spread of the validation scores. The milestone 1 version
   multi-season dataset has broader coverage but less detail on each player,
   especially defenders. EA FC attributes (D11) fill that gap, but as expert
   ratings rather than observed events.
-- Milestone 1 has 276 examples: small-sample noise, so differences in MSE
+- Milestone 1 has 267 examples: small-sample noise, so differences in MSE
   need cross-validation standard deviations alongside them.
 - Player roles come from per-90 counts that partly reflect **team
   possession**, not only the player (D14): e.g. Kanté shares a role with
@@ -607,6 +677,14 @@ more than the spread of the validation scores. The milestone 1 version
   clubs are dropped rather than given a fake label.
 - The label counts league games only (D2): cup and European minutes are
   ignored, and clubs in leagues Transfermarkt doesn't track get no label.
+- The label always counts 12 months of the new club's games, so a player who
+  leaves early scores 0 for the rest. 128 of the 276 pre-D16 players left
+  within the 365 days, but mostly at the end of the season (median 9.7
+  months); 26 left before 15 Feb 2019. Mean y: left early 0.41 vs stayed 0.55.
+  Often a real signal (sold because he wasn't playing), not always.
+- Removing loan pass-throughs (D16) uses the 60 days after the transfer to
+  decide which moves count as signings. It's a selection rule, never a model
+  feature.
   COVID affects the labels for two seasons (D9).
 - Understat data is a third-party scrape with no licence, approved by the
   professor for this course project (D8).
